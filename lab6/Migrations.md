@@ -93,7 +93,7 @@ main()
 ```
 Запускаю `node test.js`:
 
-<img width="1231" height="717" alt="image" src="https://github.com/user-attachments/assets/01533415-ec12-4e61-8ead-99f91ad7bcc2" />
+<img width="1211" height="431" alt="image" src="https://github.com/user-attachments/assets/9b482843-5476-49a1-b7f0-b55b26ee2423" />
 
 Отже, все працює. Міграції виконались.
 
