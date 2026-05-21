@@ -1,0 +1,308 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This table contains exclusion constraints and requires additional setup for migrations. Visit https://pris.ly/d/exclusion-constraints for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model bookings {
+  booking_id     Int      @id @default(autoincrement())
+  guest_id       Int
+  room_id        Int
+  check_in_date  DateTime @db.Date
+  check_out_date DateTime @db.Date
+  booking_status String   @default("confirmed") @db.VarChar(20)
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  guests         guests   @relation(fields: [guest_id], references: [guest_id], onUpdate: NoAction, map: "fk_bookings_guest")
+  rooms          rooms    @relation(fields: [room_id], references: [room_id], onUpdate: NoAction, map: "fk_bookings_room")
+
+  @@index([guest_id], map: "idx_bookings_guest_id")
+  @@index([room_id], map: "idx_bookings_room_id")
+}
+
+model brand {
+  brand_id Int    @id @default(autoincrement())
+  name     String @unique @db.VarChar(100)
+  country  String @db.VarChar(100)
+}
+
+model categories {
+  category_id Int        @id @default(autoincrement())
+  title       String     @unique @db.VarChar(50)
+  products    products[]
+}
+
+model category {
+  category_id Int    @id @default(autoincrement())
+  name        String @unique @db.VarChar(100)
+}
+
+model client {
+  client_id Int    @id @default(autoincrement())
+  surname   String @db.VarChar(100)
+  firstname String @db.VarChar(100)
+  email     String @unique @db.VarChar(100)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model course {
+  course_id      Int              @id @default(autoincrement())
+  course_name    String           @db.VarChar(100)
+  credits        Int?
+  semester       Int?
+  department_id  Int
+  department     department       @relation(fields: [department_id], references: [department_id], onDelete: NoAction, onUpdate: NoAction)
+  course_teacher course_teacher[]
+  registration   registration[]
+}
+
+model course_teacher {
+  course_id  Int
+  teacher_id Int
+  course     course  @relation(fields: [course_id], references: [course_id], onDelete: Cascade, onUpdate: NoAction)
+  teacher    teacher @relation(fields: [teacher_id], references: [teacher_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([course_id, teacher_id])
+}
+
+model department {
+  department_id   Int       @id @default(autoincrement())
+  department_name String    @db.VarChar(100)
+  faculty_id      Int
+  office_number   String?   @db.VarChar(10)
+  course          course[]
+  faculty         faculty   @relation(fields: [faculty_id], references: [faculty_id], onDelete: NoAction, onUpdate: NoAction)
+  teacher         teacher[]
+
+  @@unique([department_name, faculty_id])
+}
+
+model faculty {
+  faculty_id   Int          @id @default(autoincrement())
+  faculty_name String       @unique @db.VarChar(100)
+  department   department[]
+}
+
+model groups {
+  group_id   Int        @id
+  group_name String?    @db.VarChar(50)
+  students   students[]
+}
+
+model guests {
+  guest_id        Int        @id @default(autoincrement())
+  first_name      String     @db.VarChar(100)
+  last_name       String     @db.VarChar(100)
+  date_of_birth   DateTime?  @db.Date
+  phone           String?    @db.VarChar(30)
+  email           String?    @unique @db.VarChar(150)
+  passport_number String?    @unique @db.VarChar(50)
+  address         String?    @db.VarChar(255)
+  bookings        bookings[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model hotels {
+  hotel_id    Int     @id @default(autoincrement())
+  name        String  @db.VarChar(150)
+  location    String  @db.VarChar(200)
+  star_rating Int
+  rooms       rooms[]
+}
+
+model loginsessions {
+  session_id Int       @id @default(autoincrement())
+  user_id    Int
+  ip_address String    @db.VarChar(45)
+  login_time DateTime? @default(now()) @db.Timestamp(6)
+  users      users     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_session_user")
+}
+
+model menu_items {
+  menu_items_id   Int     @id @default(autoincrement())
+  menu_items_name String  @db.VarChar(30)
+  description     String? @db.VarChar(200)
+  price           Decimal @db.Decimal(10, 2)
+  category        String  @db.VarChar(30)
+}
+
+model obd {
+  obd_id   Int     @id @default(autoincrement())
+  order_id Int?
+  type     String? @db.VarChar(50)
+  status   String? @db.VarChar(50)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model order_items {
+  order_id          Int
+  product_id        Int
+  quantity          Int
+  price_at_purchase Decimal @db.Decimal(10, 2)
+
+  @@id([order_id, product_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orderitems {
+  order_item_id     Int      @id @default(autoincrement())
+  order_id          Int
+  product_id        Int
+  quantity          Int      @default(1)
+  price_at_purchase Decimal  @db.Decimal(10, 2)
+  orders            orders   @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_orderitems_order")
+  products          products @relation(fields: [product_id], references: [product_id], onUpdate: NoAction, map: "fk_orderitems_product")
+}
+
+model orders {
+  order_id   Int          @id @default(autoincrement())
+  user_id    Int
+  order_date DateTime?    @default(now()) @db.Timestamp(6)
+  orderitems orderitems[]
+  users      users        @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_order_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model payment {
+  payment_id Int    @id @default(autoincrement())
+  order_id   Int    @unique
+  type       String @db.VarChar(50)
+  status     String @db.VarChar(50)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model products {
+  product_id  Int          @id @default(autoincrement())
+  name        String       @db.VarChar(100)
+  price       Decimal      @db.Decimal(10, 2)
+  is_available Boolean @default(true)
+  category_id Int?
+  orderitems  orderitems[]
+  reviews reviews[]
+  categories  categories?  @relation(fields: [category_id], references: [category_id], onUpdate: NoAction, map: "fk_product_category")
+}
+
+model registration {
+  student_id          Int
+  course_id           Int
+  registration_date   DateTime?            @default(dbgenerated("CURRENT_DATE")) @db.Date
+  status_id           Int?
+  grade               String?              @db.VarChar(5)
+  course              course               @relation(fields: [course_id], references: [course_id], onDelete: Cascade, onUpdate: NoAction)
+  registration_status registration_status? @relation(fields: [status_id], references: [status_id], onDelete: NoAction, onUpdate: NoAction)
+  student             student              @relation(fields: [student_id], references: [student_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([student_id, course_id])
+}
+
+model registration_status {
+  status_id    Int            @id @default(autoincrement())
+  status_name  String         @unique @db.VarChar(20)
+  registration registration[]
+}
+
+model restaurant_table {
+  table_id     Int    @id @default(autoincrement())
+  table_number Int
+  capacity     Int
+  arrangement  String @db.VarChar(100)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model room_types {
+  room_type_id Int     @id @default(autoincrement())
+  type_name    String  @unique @db.VarChar(50)
+  description  String?
+  capacity     Int
+  amenities    String?
+  rooms        rooms[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model rooms {
+  room_id         Int        @id @default(autoincrement())
+  hotel_id        Int
+  room_type_id    Int
+  room_number     String     @db.VarChar(20)
+  floor_number    Int?
+  price_per_night Decimal    @db.Decimal(10, 2)
+  status          String     @default("available") @db.VarChar(20)
+  bookings        bookings[]
+  hotels          hotels     @relation(fields: [hotel_id], references: [hotel_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_rooms_hotel")
+  room_types      room_types @relation(fields: [room_type_id], references: [room_type_id], onUpdate: NoAction, map: "fk_rooms_room_type")
+
+  @@unique([hotel_id, room_number], map: "uq_room_per_hotel")
+  @@index([hotel_id], map: "idx_rooms_hotel_id")
+  @@index([room_type_id], map: "idx_rooms_room_type_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model student {
+  student_id      Int            @id @default(autoincrement())
+  last_name       String         @db.VarChar(50)
+  first_name      String         @db.VarChar(50)
+  birth_date      DateTime?      @db.Date
+  email           String         @unique @db.VarChar(100)
+  phone           String?        @db.VarChar(20)
+  enrollment_year Int?
+  registration    registration[]
+}
+
+model students {
+  student_id Int      @id
+  group_id   Int?
+  grade      Decimal? @db.Decimal(5, 2)
+  groups     groups?  @relation(fields: [group_id], references: [group_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model teacher {
+  teacher_id     Int              @id @default(autoincrement())
+  last_name      String           @db.VarChar(50)
+  first_name     String           @db.VarChar(50)
+  email          String           @unique @db.VarChar(100)
+  phone          String?          @db.VarChar(20)
+  position       String?          @db.VarChar(50)
+  department_id  Int
+  course_teacher course_teacher[]
+  department     department       @relation(fields: [department_id], references: [department_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model userdevicesecurity {
+  security_id       Int      @id @default(autoincrement())
+  user_id           Int      @unique
+  is_trusted_device Boolean? @default(false)
+  users             users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_security_user")
+}
+
+model users {
+  user_id            Int                 @id @default(autoincrement())
+  username           String              @unique @db.VarChar(50)
+  email              String              @unique @db.VarChar(100)
+  created_at         DateTime?           @default(now()) @db.Timestamp(6)
+  loginsessions      loginsessions[]
+  orders             orders[]
+  userdevicesecurity userdevicesecurity?
+  userwallets        userwallets?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model userwallets {
+  wallet_id      Int      @id @default(autoincrement())
+  user_id        Int      @unique
+  wallet_balance Decimal? @default(0.00) @db.Decimal(10, 2)
+  users          users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_wallet_user")
+}
+model reviews {
+  review_id  Int       @id @default(autoincrement())
+  product_id Int
+  rating     Int
+  comment    String?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+
+  products products @relation(fields: [product_id], references: [product_id], onDelete: Cascade)
+}
